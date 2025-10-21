@@ -8,11 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
-    var scene: Scene_One
+    var scene: Scene_Two
     var image: CGImage?
 
     init() {
-        self.scene = Scene_One(centers: [SIMD3<Float>(0, 0, 350), SIMD3<Float>(-192, 0, 250)], radiuses: [200, 100])
+        let spheres = [Sphere(center: SIMD3<Float>(0, 0, 350), radius: 200, color: SIMD3<Float>(0.4, 0.6, 0.2))]
+        let planes = [Plane(origin: SIMD3<Float>(0, 0, 200), normal: SIMD3<Float>(0, 0, 1))]
+        
+        
+        self.scene = Scene_Two(s: spheres, p: planes)
         self.image = scene.render(size: 512)
     }
     

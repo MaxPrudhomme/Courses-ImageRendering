@@ -7,19 +7,15 @@
 
 import simd
 
-struct Hit {
-    let l: Float
-    let point: SIMD3<Float>
-    let normal: SIMD3<Float>
-}
-
 class Sphere {
     var center: SIMD3<Float> = .zero
     var radius: Float = 1.0
+    var color: SIMD3<Float> = .one
     
-    init(center: SIMD3<Float> = .zero, radius: Float = 1.0) {
+    init(center: SIMD3<Float>, radius: Float, color: SIMD3<Float> = .one) {
         self.center = center
         self.radius = radius
+        self.color = color
     }
     
     func hit(ray: Ray) -> Hit? {
@@ -44,6 +40,6 @@ class Sphere {
         let point = ray.origin + t * ray.direction
         let normal = normalize(point - center)
         
-        return Hit(l: t, point: point, normal: normal)
+        return Hit(l: t, point: point, normal: normal, color: color)
     }
 }
