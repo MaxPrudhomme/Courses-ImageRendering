@@ -11,8 +11,9 @@ import CoreGraphics
 class Scene_Two {
     var spheres: [Sphere] = []
     var planes: [Plane] = []
+    var lights: [Light] = []
     
-    init(s: [Sphere]? = nil, p: [Plane]? = nil) {
+    init(s: [Sphere]? = nil, p: [Plane]? = nil, l: [Light]? = nil) {
         if let s = s, !s.isEmpty {
             self.spheres = s
         } else {
@@ -24,6 +25,12 @@ class Scene_Two {
         } else {
             self.planes = [Plane(origin: SIMD3<Float>(0, 200, 0), normal: SIMD3<Float>(0, 1, 0))]
         }
+        
+        if let l = l, !l.isEmpty {
+            self.lights = l
+        } else {
+            self.lights = [Light(origin: SIMD3<Float>(0, 0, 0))]
+        }
     }
     
     func trace(ray: Ray) -> SIMD4<UInt8> {
@@ -34,7 +41,8 @@ class Scene_Two {
                 if closest == nil {
                     closest = current
                 } else if let old = closest {
-                    if current.l < old.l {
+                    let epsilon: Float = 0.001
+                    if current.l + epsilon < old.l {
                         closest = current
                     }
                 }
@@ -46,7 +54,8 @@ class Scene_Two {
                 if closest == nil {
                     closest = current
                 } else if let old = closest {
-                    if current.l < old.l {
+                    let epsilon: Float = 0.001
+                    if current.l + epsilon < old.l {
                         closest = current
                     }
                 }
@@ -54,9 +63,12 @@ class Scene_Two {
         }
         
         if let hit = closest {
-            let t = 1 - min(hit.l / 496.0, 1.0) // 496 is arbitrary, this is artificial depth for now
+            let direction = normalize(lights[0].origin - hit.point)
+            
+            let diffuse = max(0.0, dot(hit.normal, direction))
+            
             let c = hit.color
-            return SIMD4<UInt8>(UInt8(255 * c.x * t), UInt8(255 * c.y * t), UInt8(255 * c.z * t), 255)
+            return SIMD4<UInt8>(UInt8(255 * c.x * diffuse), UInt8(255 * c.y * diffuse), UInt8(255 * c.z * diffuse), 255)
         } else {
             return SIMD4<UInt8>(0, 0, 0, 0)
         }

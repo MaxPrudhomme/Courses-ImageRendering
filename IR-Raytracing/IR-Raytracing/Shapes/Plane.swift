@@ -20,7 +20,7 @@ class Plane {
     
     func hit(ray: Ray) -> Hit? {
         let d = dot(normal, ray.direction)
-        if (d <= 0) { return nil }
+        if (d >= 0) { return nil }
         
         let t = dot(origin - ray.origin, normal) / d
         if t < 0 { return nil }
