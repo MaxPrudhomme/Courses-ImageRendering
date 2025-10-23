@@ -1,4 +1,3 @@
-//
 //  Sphere.swift
 //  IR-Raytracing
 //
@@ -7,15 +6,15 @@
 
 import simd
 
-class Sphere {
-    var center: SIMD3<Float> = .zero
-    var radius: Float = 1.0
-    var color: SIMD3<Float> = .one
+class Sphere: Object {
+    var center: SIMD3<Float>
+    var radius: Float
     
-    init(center: SIMD3<Float>, radius: Float, color: SIMD3<Float> = .one) {
+    init(center: SIMD3<Float>, radius: Float,
+         color: SIMD3<Float> = .one, material: material = .matte) {
         self.center = center
         self.radius = radius
-        self.color = color
+        super.init(color: color, material: material)
     }
     
     func hit(ray: Ray) -> Hit? {
@@ -24,11 +23,9 @@ class Sphere {
         let a = dot(ray.direction, ray.direction)
         let b = -2.0 * dot(ray.direction, oc)
         let c = dot(oc, oc) - r2
-        let delta = b*b - 4*a*c
+        let delta = b * b - 4 * a * c
         
-        if delta < 0 {
-            return nil
-        }
+        if delta < 0 { return nil }
         
         let sqrtD = sqrt(delta)
         var t = (-b - sqrtD) / (2.0 * a)
@@ -39,7 +36,6 @@ class Sphere {
         
         let point = ray.origin + t * ray.direction
         let normal = normalize(point - center)
-        
         return Hit(l: t, point: point, normal: normal, color: color)
     }
 }

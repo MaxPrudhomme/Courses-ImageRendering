@@ -63,15 +63,29 @@ class Scene_Two {
         }
         
         if let hit = closest {
-            let direction = normalize(lights[0].origin - hit.point)
-            
-            let diffuse = max(0.0, dot(hit.normal, direction))
-            
-            let c = hit.color
-            return SIMD4<UInt8>(UInt8(255 * c.x * diffuse), UInt8(255 * c.y * diffuse), UInt8(255 * c.z * diffuse), 255)
-        } else {
-            return SIMD4<UInt8>(0, 0, 0, 0)
-        }
+                let light = lights[0]
+                
+                let lightDir = light.origin - hit.point
+                let distance = length(lightDir)
+                let direction = normalize(lightDir)
+                
+                let diffuse = max(0.0, dot(hit.normal, direction))
+                
+                let falloff = light.intensity / (distance * distance + 20000)
+                
+                let intensity = diffuse * falloff
+                
+                let finalIntensity = min(intensity, 1.0)
+                
+                let c = hit.color
+                let r = UInt8(clamping: Int(255 * c.x * finalIntensity))
+                let g = UInt8(clamping: Int(255 * c.y * finalIntensity))
+                let b = UInt8(clamping: Int(255 * c.z * finalIntensity))
+                
+                return SIMD4<UInt8>(r, g, b, 255)
+            } else {
+                return SIMD4<UInt8>(0, 0, 0, 0)
+            }
     }
     
     func render(size: Int) -> CGImage? {

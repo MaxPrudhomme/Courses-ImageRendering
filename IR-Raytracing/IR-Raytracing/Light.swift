@@ -9,7 +9,7 @@ class Light {
     var origin: SIMD3<Float>
     var intensity: Float
     
-    init(origin: SIMD3<Float> = .zero, intensity: Float  = 100) {
+    init(origin: SIMD3<Float> = .zero, intensity: Float  = 10000) {
         self.origin = origin
         self.intensity = intensity
     }
