@@ -17,6 +17,16 @@ struct Hit {
     bool hit;
 };
 
+struct Triangle {
+    float3 p0;
+    float3 p1;
+    float3 p2;
+    float3 color;
+    int material;
+    float3 normal;
+    float ior;
+};
+
 struct Sphere {
     float3 center;
     float radius;
@@ -63,6 +73,51 @@ float3 randomInUnitSphere(thread uint2& state) {
 }
 
 // --- Intersection Functions ---
+
+Hit hitTriangle(Ray ray, constant Triangle& triangle) {
+    Hit hit;
+    hit.hit = false;
+
+    float epsilon = 1e-6;
+    float3 p0 = triangle.p0;
+    float3 p1 = triangle.p1;
+    float3 p2 = triangle.p2;
+    float3 normal = triangle.normal;
+
+    float3 edge1 = p1 - p0;
+    float3 edge2 = p2 - p0;
+    float3 h = cross(ray.direction, edge2);
+    float a = dot(edge1, h);
+    if (fabs(a) < epsilon) return hit;
+    
+    // Backface culling: if determinant is negative (or dot(normal, ray) > 0), we are hitting the back
+    // For closed objects, this prevents seeing the inside (fixing light leaks)
+    if (triangle.material != 1) { // Don't cull glass
+         if (dot(triangle.normal, ray.direction) > 0) return hit;
+    }
+
+    float f = 1.0 / a;
+    float3 s = ray.origin - p0;
+    float u = f * dot(s, h);
+    // Relaxed bounds to prevent cracks
+    if (u < -1e-5 || u > 1.0 + 1e-5) return hit;
+
+    float3 q = cross(s, edge1);
+    float v = f * dot(ray.direction, q);
+    if (v < -1e-5 || u + v > 1.0 + 1e-5) return hit;
+
+    float t = f * dot(edge2, q);
+    if (t < epsilon) return hit; // no intersection behind ray origin
+
+    hit.l = t;
+    hit.point = ray.origin + t * ray.direction;
+    hit.normal = normal;
+    hit.color = triangle.color;
+    hit.material = triangle.material;
+    hit.ior = triangle.ior;
+    hit.hit = true;
+    return hit;
+}
 
 Hit hitSphere(Ray ray, constant Sphere& sphere) {
     Hit hit;
@@ -115,7 +170,7 @@ Hit hitPlane(Ray ray, constant Plane& plane) {
 }
 
 // --- Shadow Function ---
-bool inShadow(Ray ray, float maxDistance, constant Sphere* spheres, int sphereCount, constant Plane* planes, int planeCount) {
+bool inShadow(Ray ray, float maxDistance, constant Sphere* spheres, int sphereCount, constant Plane* planes, int planeCount, constant Triangle* triangles, int triangleCount) {
     for (int i = 0; i < sphereCount; i++) {
         if (spheres[i].material == 1) continue; // Glass doesn't cast shadow
         Hit h = hitSphere(ray, spheres[i]);
@@ -126,11 +181,16 @@ bool inShadow(Ray ray, float maxDistance, constant Sphere* spheres, int sphereCo
         Hit h = hitPlane(ray, planes[i]);
         if (h.hit && h.l < maxDistance) return true;
     }
+    for (int i = 0; i < triangleCount; i++) {
+        if (triangles[i].material == 1) continue; // Glass doesn't cast shadow
+        Hit h = hitTriangle(ray, triangles[i]);
+        if (h.hit && h.l < maxDistance) return true;
+    }
     return false;
 }
 
 // --- Lighting Calculation ---
-float3 calculateDiffuse(Hit hit, constant Sphere* spheres, int sphereCount, constant Plane* planes, int planeCount, constant Light* lights, int lightCount, thread uint2& rngState) {
+float3 calculateDiffuse(Hit hit, constant Sphere* spheres, int sphereCount, constant Plane* planes, int planeCount, constant Triangle* triangles, int triangleCount, constant Light* lights, int lightCount, thread uint2& rngState) {
     // Assuming only 1 light as per CPU code assumption, but loop works too
     if (lightCount == 0) return float3(0);
     
@@ -158,7 +218,7 @@ float3 calculateDiffuse(Hit hit, constant Sphere* spheres, int sphereCount, cons
             shadowRay.direction = normalize(sampleDir);
             shadowRay.origin = hit.point + hit.normal * 0.001;
             
-            if (inShadow(shadowRay, sampleDist, spheres, sphereCount, planes, planeCount)) {
+            if (inShadow(shadowRay, sampleDist, spheres, sphereCount, planes, planeCount, triangles, triangleCount)) {
                 shadowIntensity += 1.0;
             }
         }
@@ -168,7 +228,7 @@ float3 calculateDiffuse(Hit hit, constant Sphere* spheres, int sphereCount, cons
         shadowRay.direction = normalize(lightDir);
         shadowRay.origin = hit.point + hit.normal * 0.001;
         
-        if (inShadow(shadowRay, distance, spheres, sphereCount, planes, planeCount)) {
+        if (inShadow(shadowRay, distance, spheres, sphereCount, planes, planeCount, triangles, triangleCount)) {
             shadowIntensity = 1.0;
         }
     }
@@ -188,6 +248,8 @@ kernel void traceKernel(texture2d<float, access::write> output [[texture(0)]],
                         constant uint& planeCount [[buffer(3)]],
                         constant Light* lights [[buffer(4)]],
                         constant uint& lightCount [[buffer(5)]],
+                        constant Triangle* triangles [[buffer(6)]],
+                        constant uint& triangleCount [[buffer(7)]],
                         uint2 gid [[thread_position_in_grid]]) {
     
     if (gid.x >= output.get_width() || gid.y >= output.get_height()) return;
@@ -226,6 +288,12 @@ kernel void traceKernel(texture2d<float, access::write> output [[texture(0)]],
                 closest = h;
             }
         }
+        for (uint i = 0; i < triangleCount; i++) {
+            Hit h = hitTriangle(ray, triangles[i]);
+            if (h.hit && h.l < closest.l) {
+                closest = h;
+            }
+        }
         
         if (!closest.hit) {
             // Background color or terminate
@@ -238,7 +306,7 @@ kernel void traceKernel(texture2d<float, access::write> output [[texture(0)]],
         
         // Handle Materials
         if (closest.material == 2) { // Matte
-            float3 diffuse = calculateDiffuse(closest, spheres, sphereCount, planes, planeCount, lights, lightCount, rngState);
+            float3 diffuse = calculateDiffuse(closest, spheres, sphereCount, planes, planeCount, triangles, triangleCount, lights, lightCount, rngState);
             finalColor += throughput * diffuse;
             break; // Terminate path
         } else if (closest.material == 0) { // Metal

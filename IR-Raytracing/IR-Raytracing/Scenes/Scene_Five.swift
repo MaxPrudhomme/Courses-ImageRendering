@@ -11,18 +11,31 @@ import CoreGraphics
 class Scene_Five: RayTracingScene {
     var maxDepth: Int = 10
     
-    init(s: [Sphere]? = nil, p: [Plane]? = nil, l: [Light]? = nil) {
+    init(
+        s: [Sphere]? = nil,
+        p: [Plane]? = nil,
+        l: [Light]? = nil,
+        m: [Mesh]? = nil
+    ) {
         super.init()
         
         let spheres: [Sphere] = s ?? []
         let planes: [Plane] = p ?? []
+        let meshes: [Mesh] = m ?? []
+        var triangles: [Triangle] = []
 
-        if spheres.isEmpty && planes.isEmpty {
+        // Convert meshes to triangles
+        for mesh in meshes {
+            let meshTriangles = mesh.toTriangles()
+            triangles.append(contentsOf: meshTriangles)
+        }
+
+        if spheres.isEmpty && planes.isEmpty && triangles.isEmpty {
             let defaultSpheres: [Sphere] = [Sphere(center: SIMD3<Float>(0, 0, 0), radius: 1)]
             let defaultPlanes: [Plane] = [Plane(origin: SIMD3<Float>(0, 200, 0), normal: SIMD3<Float>(0, 1, 0))]
             self.objects = defaultSpheres.map { $0 as Object } + defaultPlanes.map { $0 as Object }
         } else {
-            self.objects = spheres.map { $0 as Object } + planes.map { $0 as Object }
+            self.objects = spheres.map { $0 as Object } + planes.map { $0 as Object } + triangles.map { $0 as Object }
         }
         
         if let l = l, !l.isEmpty {

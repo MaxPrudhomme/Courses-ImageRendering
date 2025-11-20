@@ -26,8 +26,28 @@ struct ContentView: View {
         ]
         let lights = [Light(origin: SIMD3<Float>(0, 25, 200), intensity: 30000)]
         
+        // Create and configure meshes
+        var meshes: [Mesh] = []
         
-        self.scene = Scene_Four(s: spheres, p: planes, l: lights)
+        do {
+            let mesh = Mesh()
+            try mesh.load(named: "cube")
+            mesh.center()  // Center at origin
+            mesh.normalize()  // Normalize to unit size
+            // mesh.makeNormals()  // Compute smooth normals (Commented out for flat shading on cube)
+            
+            // Apply transformations
+            mesh.position = SIMD3<Float>(0, 0, 50)
+            mesh.scale = SIMD3<Float>(10, 10, 10)
+            mesh.color = SIMD3<Float>(0, 1, 0)
+            mesh.material = .matte
+            
+            meshes.append(mesh)
+        } catch {
+            print("Failed to load mesh: \(error)")
+        }
+        
+        self.scene = Scene_Five(s: spheres, p: planes, l: lights, m: meshes)
         self.image = scene.render(size: 512)
     }
     
@@ -36,7 +56,7 @@ struct ContentView: View {
             if let image = image {
                 Image(decorative: image, scale: 1.0, orientation: .up)
                     .resizable()
-                    .interpolation(.none)
+                    .interpolation(.high) // Smoother scaling
                     .scaledToFit()
                     .frame(width: 512, height: 512)
                     .cornerRadius(8)
