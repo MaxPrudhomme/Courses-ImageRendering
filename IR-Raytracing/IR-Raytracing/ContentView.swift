@@ -8,17 +8,17 @@
 import SwiftUI
 
 struct ContentView: View {
-    var scene: Scene_Three
+    var scene: Scene_Four
     var image: CGImage?
 
     init() {
         let spheres = [
-            Sphere(center: SIMD3<Float>(100, -50, 250), radius: 75, color: SIMD3<Float>(1, 1, 1)),
-            Sphere(center: SIMD3<Float>(-100, -50, 250), radius: 75, color: SIMD3<Float>(1, 1, 1))
+            Sphere(center: SIMD3<Float>(100, -50, 250), radius: 75, color: SIMD3<Float>(1, 1, 1), material: .metal),
+            Sphere(center: SIMD3<Float>(-100, -50, 250), radius: 75, color: SIMD3<Float>(1, 1, 1), material: .glass)
         ]
         let planes = [
-            Plane(origin: SIMD3<Float>(0, 0, 300), normal: SIMD3<Float>(0, 0, -1), color: SIMD3<Float>(1, 1, 1)),
-            Plane(origin: SIMD3<Float>(0, 0, -300), normal: SIMD3<Float>(0, 0, -1), color: SIMD3<Float>(1, 0, 0)),
+            Plane(origin: SIMD3<Float>(0, 0, 400), normal: SIMD3<Float>(0, 0, -1), color: SIMD3<Float>(1, 0, 1)),
+            Plane(origin: SIMD3<Float>(0, 0, 0), normal: SIMD3<Float>(0, 0, 1), color: SIMD3<Float>(1, 0, 0)),
             Plane(origin: SIMD3<Float>(0, 200, 0), normal: SIMD3<Float>(0, -1, 0), color: SIMD3<Float>(1, 1, 1)),
             Plane(origin: SIMD3<Float>(0, -200, 0), normal: SIMD3<Float>(0, 1, 0), color: SIMD3<Float>(1, 1, 1)),
             Plane(origin: SIMD3<Float>(200, 0, 0), normal: SIMD3<Float>(-1, 0, 0), color: SIMD3<Float>(1, 1, 0)),
@@ -27,7 +27,7 @@ struct ContentView: View {
         let lights = [Light(origin: SIMD3<Float>(0, 25, 200), intensity: 30000)]
         
         
-        self.scene = Scene_Three(s: spheres, p: planes, l: lights)
+        self.scene = Scene_Four(s: spheres, p: planes, l: lights)
         self.image = scene.render(size: 512)
     }
     

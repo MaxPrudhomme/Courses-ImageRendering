@@ -40,3 +40,20 @@ func toCGImage(buffer: [SIMD4<UInt8>], size: Int) -> CGImage? {
         intent: .defaultIntent
     )
 }
+
+
+func blendColors(
+    _ c1: SIMD4<UInt8>,
+    _ c2: SIMD4<UInt8>,
+    weight: Float
+) -> SIMD4<UInt8> {
+    let w1 = 1.0 - weight
+    let w2 = weight
+
+    let r = UInt8(clamping: Int(Float(c1.x) * w1 + Float(c2.x) * w2))
+    let g = UInt8(clamping: Int(Float(c1.y) * w1 + Float(c2.y) * w2))
+    let b = UInt8(clamping: Int(Float(c1.z) * w1 + Float(c2.z) * w2))
+    let a = UInt8(clamping: Int(Float(c1.w) * w1 + Float(c2.w) * w2))
+
+    return SIMD4<UInt8>(r, g, b, a)
+}

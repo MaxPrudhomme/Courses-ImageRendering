@@ -11,13 +11,13 @@ class Plane: Object {
     var normal: SIMD3<Float>
     
     init(origin: SIMD3<Float>, normal: SIMD3<Float>,
-         color: SIMD3<Float> = .one, material: material = .matte) {
+         color: SIMD3<Float> = .one, material: Material = .matte) {
         self.origin = origin
         self.normal = normal
         super.init(color: color, material: material)
     }
     
-    func hit(ray: Ray) -> Hit? {
+    override func hit(ray: Ray) -> Hit? {
         let d = dot(normal, ray.direction)
         if d >= 0 { return nil }
         
@@ -25,6 +25,6 @@ class Plane: Object {
         if t < 0 { return nil }
         
         let point = ray.origin + t * ray.direction
-        return Hit(l: t, point: point, normal: normal, color: color)
+        return Hit(l: t, point: point, normal: normal, color: color, material: material, object: self)
     }
 }

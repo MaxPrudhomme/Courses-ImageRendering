@@ -26,4 +26,6 @@ struct Hit {
     let point: SIMD3<Float>
     let normal: SIMD3<Float>
     let color: SIMD3<Float>
+    let material: Material
+    let object: Object
 }

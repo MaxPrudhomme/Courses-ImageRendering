@@ -11,13 +11,13 @@ class Sphere: Object {
     var radius: Float
     
     init(center: SIMD3<Float>, radius: Float,
-         color: SIMD3<Float> = .one, material: material = .matte) {
+         color: SIMD3<Float> = .one, material: Material = .matte) {
         self.center = center
         self.radius = radius
         super.init(color: color, material: material)
     }
     
-    func hit(ray: Ray) -> Hit? {
+    override func hit(ray: Ray) -> Hit? {
         let oc = center - ray.origin
         let r2 = radius * radius
         let a = dot(ray.direction, ray.direction)
@@ -35,7 +35,8 @@ class Sphere: Object {
         }
         
         let point = ray.origin + t * ray.direction
-        let normal = normalize(point - center)
-        return Hit(l: t, point: point, normal: normal, color: color)
+        var normal = normalize(point - center)
+        
+        return Hit(l: t, point: point, normal: normal, color: color, material: material, object: self)
     }
 }
