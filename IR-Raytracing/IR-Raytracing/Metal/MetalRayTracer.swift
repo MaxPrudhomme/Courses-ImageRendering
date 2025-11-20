@@ -36,14 +36,16 @@ class MetalRayTracer {
         }
     }
     
-    func render(scene: Scene_Four, size: Int) -> CGImage? {
+    func render(scene: RayTracingScene, size: Int) -> CGImage? {
         // 1. Prepare Data
         let spheres = scene.objects.compactMap { $0 as? Sphere }
         let planes = scene.objects.compactMap { $0 as? Plane }
+        let triangles = scene.objects.compactMap { $0 as? Triangle }
         
         let gpuSpheres = spheres.map { GPUSphere(sphere: $0) }
         let gpuPlanes = planes.map { GPUPlane(plane: $0) }
         let gpuLights = scene.lights.map { GPULight(light: $0) }
+        let gpuTriangles = triangles.map { GPUTriangle(triangle: $0) }
         
         // 2. Create Output Texture
         let textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: size, height: size, mipmapped: false)
@@ -70,6 +72,10 @@ class MetalRayTracer {
         var lightCount = UInt32(gpuLights.count)
         encoder.setBytes(&lightCount, length: 4, index: 5)
         
+        setBuffer(encoder: encoder, data: gpuTriangles, index: 6)
+        var triangleCount = UInt32(gpuTriangles.count)
+        encoder.setBytes(&triangleCount, length: 4, index: 7)
+
         let threadGroupSize = MTLSize(width: 16, height: 16, depth: 1)
         let threadGroups = MTLSize(width: (size + 15) / 16, height: (size + 15) / 16, depth: 1)
         

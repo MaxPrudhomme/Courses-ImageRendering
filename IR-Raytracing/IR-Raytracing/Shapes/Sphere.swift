@@ -35,7 +35,7 @@ class Sphere: Object {
         }
         
         let point = ray.origin + t * ray.direction
-        var normal = normalize(point - center)
+        let normal = normalize(point - center)
         
         return Hit(l: t, point: point, normal: normal, color: color, material: material, object: self)
     }

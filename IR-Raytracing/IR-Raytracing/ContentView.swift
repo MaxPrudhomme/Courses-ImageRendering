@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    var scene: Scene_Four
+    var scene: RayTracingScene
     var image: CGImage?
 
     init() {

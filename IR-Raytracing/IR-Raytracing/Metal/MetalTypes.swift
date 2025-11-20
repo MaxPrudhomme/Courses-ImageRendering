@@ -7,6 +7,31 @@
 
 import simd
 
+struct GPUTriangle {
+    var p0: SIMD3<Float>
+    var p1: SIMD3<Float>
+    var p2: SIMD3<Float>
+    
+    var color: SIMD3<Float>
+    var material: Int32
+    var normal: SIMD3<Float>
+    var ior: Float
+    
+    init(triangle: Triangle) {
+        self.p0 = triangle.p0
+        self.p1 = triangle.p1
+        self.p2 = triangle.p2
+        self.color = triangle.color
+        switch triangle.material {
+        case .metal: self.material = 0
+        case .glass: self.material = 1
+        case .matte: self.material = 2
+        }
+        self.normal = triangle.normal
+        self.ior = triangle.ior
+    }
+}
+
 struct GPUSphere {
     var center: SIMD3<Float>
     var radius: Float

@@ -1,15 +1,14 @@
 //
-//  Scene_Four.swift
+//  Scene_Five.swift
 //  IR-Raytracing
 //
-//  Created by Max PRUDHOMME on 06/11/2025.
+//  Created by Max PRUDHOMME on 20/11/2025.
 //
-
 
 import simd
 import CoreGraphics
 
-class Scene_Four: RayTracingScene {
+class Scene_Five: RayTracingScene {
     var maxDepth: Int = 10
     
     init(s: [Sphere]? = nil, p: [Plane]? = nil, l: [Light]? = nil) {
