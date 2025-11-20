@@ -77,24 +77,10 @@ class Scene_Four {
         }
     }
     
+    lazy var metalTracer = MetalRayTracer()
+    
     func render(size: Int) -> CGImage? {
-        var buffer = Array(repeating: SIMD4<UInt8>.zero, count: size * size)
-        let camera: SIMD3<Float> = .zero
-        
-        for y in 0..<size {
-            for x in 0..<size {
-                let u = 2 * Float(x) / Float(size) - 1
-                let v = 1 - 2 * Float(y) / Float(size)
-                
-                let direction = normalize(SIMD3<Float>(u, v, 1))
-                let ray = Ray(direction: direction, origin: camera)
-                
-                buffer[y * size + x] = trace(ray: ray, depth: 0)
-            }
-        }
-        
-        
-        return toCGImage(buffer: buffer, size: size)
+        return metalTracer.render(scene: self, size: size)
     }
 }
 
